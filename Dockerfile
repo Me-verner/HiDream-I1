@@ -1,16 +1,20 @@
-FROM pytorch/pytorch:2.2.1-cuda12.1-cudnn8-runtime
+FROM nvidia/cuda:12.2.2-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
+ENV CUDA_HOME=/usr/local/cuda
 
 RUN apt-get update && apt-get install -y \
     python3-pip \
+    python3-dev \
+    python-is-python3 \
     git \
     libgl1 \
-    unzip \
     wget \
-    curl && \
-    rm -rf /var/lib/apt/lists/*
+    curl \
+    unzip \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
