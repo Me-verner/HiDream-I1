@@ -1,9 +1,19 @@
-FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-devel
-WORKDIR /app
+FROM nvidia/cuda:12.4.1-cudnn9-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive PIP_PREFER_BINARY=1 PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y \
+    python3.10 python3-pip git && \
+    ln -sf /usr/bin/python3.10 /usr/bin/python && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install ninja
-RUN pip install -U flash-attn --no-build-isolation
-RUN pip install runpod
+
 COPY src /app/src
+COPY hi_diffusers /app/hi_diffusers
+WORKDIR /app
+
+RUN python src/download_models.py
+
 CMD ["python", "-u", "src/handler.py"]
