@@ -1,15 +1,12 @@
-FROM runpod/base:0.6.2-cuda12.1.0
-
+FROM pytorch/pytorch:2.4.0-cuda12.4-cudnn9-devel
 WORKDIR /app
-
-# Install your dependencies
+# Install dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt && \
-    pip install runpod
-
-# Copy all your source code
-COPY . .
-
-# Start the RunPod handler (which you created in handler.py)
-CMD ["python", "-u", "handler.py"]
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install ninja
+RUN pip install -U flash-attn --no-build-isolation
+RUN pip install runpod
+# Copy the handler script
+COPY src /app/src
+# Start the serverless worker
+CMD ["python", "-u", "src/handler.py"]
