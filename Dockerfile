@@ -1,11 +1,12 @@
-FROM python:3.10-slim
+FROM runpod/base:0.6.3-cuda12.1.0
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential git && \
-    rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-RUN pip install --no-cache-dir torch torchvision diffusers transformers accelerate einops runpod
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    pip install runpod
 
-COPY handler.py /handler.py
+COPY . .
 
-CMD ["python", "-u", "/handler.py"]
+CMD ["python3", "-u", "handler.py"]
