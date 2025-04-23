@@ -7,31 +7,38 @@ from io import BytesIO
 from PIL import Image
 import os
 
-hidream_model_path = "/runpod-volume/models/HiDream-I1-Full"
-llama_model_path = "/runpod-volume/models/Meta-Llama-3.1-8B-Instruct"
+# Model paths from environment variables
+hidream_model_path = os.getenv("HIDREAM_MODEL_PATH", "/runpod-volume/models/HiDream-I1-Full")
+llama_model_path = os.getenv("LLAMA_MODEL_PATH", "/runpod-volume/models/Meta-Llama-3.1-8B-Instruct")
 
-tokenizer_4 = PreTrainedTokenizerFast.from_pretrained(llama_model_path)
-text_encoder_4 = LlamaForCausalLM.from_pretrained(
-    llama_model_path,
-    output_hidden_states=True,
-    output_attentions=True,
-    torch_dtype=torch.bfloat16
-).to("cuda")
-
-pipe = HiDreamImagePipeline.from_pretrained(
-    hidream_model_path,
-    tokenizer_4=tokenizer_4,
-    text_encoder_4=text_encoder_4,
-    torch_dtype=torch.bfloat16
-).to("cuda")
+# Load models
+try:
+    tokenizer_4 = PreTrainedTokenizerFast.from_pretrained(llama_model_path)
+    text_encoder_4 = LlamaForCausalLM.from_pretrained(
+        llama_model_path,
+        output_hidden_states=True,
+        output_attentions=True,
+        torch_dtype=torch.bfloat16
+    ).to("cuda")
+    pipe = HiDreamImagePipeline.from_pretrained(
+        hidream_model_path,
+        tokenizer_4=tokenizer_4,
+        text_encoder_4=text_encoder_4,
+        torch_dtype=torch.bfloat16
+    ).to("cuda")
+except Exception as e:
+    raise Exception(f"Model loading failed: {str(e)}")
 
 def handler(job):
     input_data = job["input"]
-    prompt = input_data.get("prompt", "A serene landscape with mountains")
-    image = pipe(prompt).images[0]
-    buffered = BytesIO()
-    image.save(buffered, format="PNG")
-    img_str = base64.b64encode(buffered.getvalue()).decode()
-    return {"image": img_str}
+    prompt = input_data.get("prompt", "A serene landscape")
+    try:
+        image = pipe(prompt).images[0]
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        return {"image": img_str}
+    except Exception as e:
+        return {"error": f"Inference failed: {str(e)}"}
 
 runpod.serverless.start({"handler": handler})
