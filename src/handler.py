@@ -1,5 +1,5 @@
 import runpod
-from diffusers import HiDreamImagePipeline
+from src.hidream_pipeline import HiDreamImagePipeline
 from transformers import PreTrainedTokenizerFast, LlamaForCausalLM
 import torch
 import base64
@@ -7,11 +7,9 @@ from io import BytesIO
 from PIL import Image
 import os
 
-# Model paths from environment variables
 hidream_model_path = os.getenv("HIDREAM_MODEL_PATH", "/runpod-volume/models/HiDream-I1-Full")
 llama_model_path = os.getenv("LLAMA_MODEL_PATH", "/runpod-volume/models/Meta-Llama-3.1-8B-Instruct")
 
-# Load models
 try:
     tokenizer_4 = PreTrainedTokenizerFast.from_pretrained(llama_model_path)
     text_encoder_4 = LlamaForCausalLM.from_pretrained(
