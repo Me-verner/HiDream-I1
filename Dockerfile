@@ -1,12 +1,15 @@
-FROM runpod/base:0.4.0-cuda11.8.0
+FROM runpod/base:0.6.2-cuda12.1.0
 
 WORKDIR /app
 
+# Install your dependencies
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt && \
     pip install runpod
 
+# Copy all your source code
 COPY . .
 
-CMD ["python3", "-u", "handler.py"]
+# Start the RunPod handler (which you created in handler.py)
+CMD ["python", "-u", "handler.py"]
